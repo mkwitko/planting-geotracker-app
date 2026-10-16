@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Repos: app = `udv-plantio-app/`, backend = `udv-plantio-back/` (siblings under `udv/plantio/`). Each is its own git repo.
+- Repos: app = `planting-geotracker-app/`, backend = `planting-geotracker-api/` (siblings under `planting-geotracker/`). Each is its own git repo.
 - No new dependencies in either repo.
 - Outbox storage key: `plant_outbox_v1`. Legacy key to migrate: `offline_plants_v2`.
 - Local plant ids: prefix `local_` (legacy `temp_` also counts as local).
@@ -35,9 +35,9 @@
 ### Task 1: Backend auth — verified refresh, refresh route without middleware, Bearer header
 
 **Files:**
-- Modify: `udv-plantio-back/src/api/v1/services/authentication/refresh-token-service.ts`
-- Modify: `udv-plantio-back/src/api/v1/controllers/authentication/refresh-token.ts`
-- Modify: `udv-plantio-back/src/middlewares/authentication-middleware.ts`
+- Modify: `planting-geotracker-api/src/api/v1/services/authentication/refresh-token-service.ts`
+- Modify: `planting-geotracker-api/src/api/v1/controllers/authentication/refresh-token.ts`
+- Modify: `planting-geotracker-api/src/middlewares/authentication-middleware.ts`
 
 **Interfaces:**
 - Produces: `POST /authentication/refresh` accepts `{ refreshToken }` with no cookie or header. Any authenticated route accepts `Authorization: Bearer <accessToken>`, with the cookie as fallback.
@@ -90,7 +90,7 @@ with:
 
 - [ ] **Step 4: Typecheck**
 
-Run: `cd udv-plantio-back && npx tsc --noEmit 2>&1 | grep -E "refresh-token|authentication-middleware"`
+Run: `cd planting-geotracker-api && npx tsc --noEmit 2>&1 | grep -E "refresh-token|authentication-middleware"`
 Expected: no output.
 
 - [ ] **Step 5: Manual check (only if a local DB and `.env` are available)**
@@ -109,7 +109,7 @@ Expected: `401`. Then sign in, take `accessToken` from the response body and cal
 - [ ] **Step 6: Commit**
 
 ```bash
-cd udv-plantio-back
+cd planting-geotracker-api
 git add src/api/v1/services/authentication/refresh-token-service.ts src/api/v1/controllers/authentication/refresh-token.ts src/middlewares/authentication-middleware.ts
 git commit -m "fix(auth): verify refresh token, accept Bearer header"
 ```
@@ -119,11 +119,11 @@ git commit -m "fix(auth): verify refresh token, accept Bearer header"
 ### Task 2: Backend — idempotent create and 404 for missing records
 
 **Files:**
-- Create: `udv-plantio-back/src/errors/not-found-error.ts`
-- Modify: `udv-plantio-back/src/lib/prisma/prisma.ts`
-- Modify: `udv-plantio-back/src/error-handler.ts`
-- Modify: `udv-plantio-back/src/api/v1/models/plants-model.ts:23-29`
-- Test: `udv-plantio-back/src/api/v1/models/plants-model.test.ts`
+- Create: `planting-geotracker-api/src/errors/not-found-error.ts`
+- Modify: `planting-geotracker-api/src/lib/prisma/prisma.ts`
+- Modify: `planting-geotracker-api/src/error-handler.ts`
+- Modify: `planting-geotracker-api/src/api/v1/models/plants-model.ts:23-29`
+- Test: `planting-geotracker-api/src/api/v1/models/plants-model.test.ts`
 
 **Interfaces:**
 - Produces: `POST /plants/create` with `offlinePreviousId` upserts by that field and returns 201 with the plant. `PUT /plant/update` and `DELETE /plants/delete` on a missing id return 404.
@@ -179,7 +179,7 @@ describe("PlantsModel.create", () => {
 
 - [ ] **Step 2: Run it to verify it fails**
 
-Run: `cd udv-plantio-back && npx vitest run src/api/v1/models/plants-model.test.ts`
+Run: `cd planting-geotracker-api && npx vitest run src/api/v1/models/plants-model.test.ts`
 Expected: FAIL. The first test fails because `create` was called instead of `upsert`.
 
 - [ ] **Step 3: Implement the upsert**
@@ -265,9 +265,9 @@ git commit -m "feat(plants): idempotent create by offlinePreviousId, 404 on miss
 ### Task 3: App — pure outbox core + JWT decode, with self-check
 
 **Files:**
-- Create: `udv-plantio-app/src/lib/plants/outbox-core.ts`
-- Create: `udv-plantio-app/src/lib/jwt.ts`
-- Test: `udv-plantio-app/src/lib/plants/outbox-core.check.ts`
+- Create: `planting-geotracker-app/src/lib/plants/outbox-core.ts`
+- Create: `planting-geotracker-app/src/lib/jwt.ts`
+- Test: `planting-geotracker-app/src/lib/plants/outbox-core.check.ts`
 
 **Interfaces:**
 - Produces (all exported from `outbox-core.ts`):
@@ -446,7 +446,7 @@ console.log("outbox-core: ok");
 
 - [ ] **Step 2: Run it to verify it fails**
 
-Run: `cd udv-plantio-app && npx tsx src/lib/plants/outbox-core.check.ts`
+Run: `cd planting-geotracker-app && npx tsx src/lib/plants/outbox-core.check.ts`
 Expected: FAIL with a "Cannot find module" error for `./outbox-core` or `../jwt`.
 
 - [ ] **Step 3: Implement `jwt.ts`**
@@ -733,13 +733,13 @@ git commit -m "feat(offline): pure outbox core with compaction and self-check"
 ### Task 4: App — outbox persistence, sync-op, network and session helpers
 
 **Files:**
-- Create: `udv-plantio-app/src/lib/plants/outbox.ts`
-- Create: `udv-plantio-app/src/lib/plants/sync-op.ts`
-- Modify: `udv-plantio-app/src/lib/plants/image-storage.ts:14-16` (isLocalImage moves to core)
-- Modify: `udv-plantio-app/src/lib/plants/image-upload.ts` (MissingImageError)
-- Modify: `udv-plantio-app/src/lib/plants/plant-payload.ts` (type import)
-- Modify: `udv-plantio-app/src/lib/api.ts` (timeout, keep axios error)
-- Modify: `udv-plantio-app/src/lib/session.ts` (getSessionUserId)
+- Create: `planting-geotracker-app/src/lib/plants/outbox.ts`
+- Create: `planting-geotracker-app/src/lib/plants/sync-op.ts`
+- Modify: `planting-geotracker-app/src/lib/plants/image-storage.ts:14-16` (isLocalImage moves to core)
+- Modify: `planting-geotracker-app/src/lib/plants/image-upload.ts` (MissingImageError)
+- Modify: `planting-geotracker-app/src/lib/plants/plant-payload.ts` (type import)
+- Modify: `planting-geotracker-app/src/lib/api.ts` (timeout, keep axios error)
+- Modify: `planting-geotracker-app/src/lib/session.ts` (getSessionUserId)
 
 **Interfaces:**
 - Consumes: everything from Task 3.
@@ -1083,9 +1083,9 @@ git commit -m "feat(offline): outbox storage, sync-op, axios timeout"
 ### Task 5: App — OfflineContext sync engine, usePlantsView, cache 30d, logout clears cache
 
 **Files:**
-- Modify (full rewrite): `udv-plantio-app/src/context/offline-context.tsx`
-- Modify: `udv-plantio-app/src/lib/react-query.ts`
-- Modify: `udv-plantio-app/src/context/auth-context.tsx:78-86`
+- Modify (full rewrite): `planting-geotracker-app/src/context/offline-context.tsx`
+- Modify: `planting-geotracker-app/src/lib/react-query.ts`
+- Modify: `planting-geotracker-app/src/context/auth-context.tsx:78-86`
 
 **Interfaces:**
 - Consumes: `outbox.ts`, `sync-op.ts`, `outbox-core.ts`, `getSessionUserId`, `subscribeSession`.
@@ -1344,12 +1344,12 @@ git commit -m "feat(offline): outbox sync engine and plants view"
 ### Task 6: App — screens use the outbox
 
 **Files:**
-- Modify (full rewrite of logic): `udv-plantio-app/src/pages/add-plants/add-plants-screen.tsx`
-- Modify: `udv-plantio-app/app/authenticated/(tabs)/plants.tsx`
-- Modify: `udv-plantio-app/app/authenticated/(tabs)/index.tsx`
-- Modify: `udv-plantio-app/src/pages/plants-map/plants-map-screen.tsx`
-- Modify: `udv-plantio-app/src/pages/plants-map/hooks/use-map-plants.ts`
-- Delete: `udv-plantio-app/src/lib/plants/offline.ts`
+- Modify (full rewrite of logic): `planting-geotracker-app/src/pages/add-plants/add-plants-screen.tsx`
+- Modify: `planting-geotracker-app/app/authenticated/(tabs)/plants.tsx`
+- Modify: `planting-geotracker-app/app/authenticated/(tabs)/index.tsx`
+- Modify: `planting-geotracker-app/src/pages/plants-map/plants-map-screen.tsx`
+- Modify: `planting-geotracker-app/src/pages/plants-map/hooks/use-map-plants.ts`
+- Delete: `planting-geotracker-app/src/lib/plants/offline.ts`
 
 **Interfaces:**
 - Consumes: `useOfflineContext()`, `usePlantsView()`, `ViewPlant` from Task 5 and Task 3.

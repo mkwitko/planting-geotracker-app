@@ -1,7 +1,7 @@
 # Offline-first: fila de operações e autenticação
 
 Data: 2026-09-24
-Repos: `udv-plantio-app` (principal), `udv-plantio-back` (ajustes)
+Repos: `planting-geotracker-app` (principal), `planting-geotracker-api` (ajustes)
 
 ## Objetivo
 

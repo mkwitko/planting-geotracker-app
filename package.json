@@ -1,5 +1,5 @@
 {
-  "name": "plantio-app",
+  "name": "planting-geotracker-app",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {

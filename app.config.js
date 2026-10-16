@@ -2,23 +2,23 @@ import 'dotenv/config';
 
 export default {
   expo: {
-    name: "DPMA Geo",
-    slug: "plantio-app",
+    name: "Planting Geotracker",
+    slug: "planting-geotracker-app",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
-    scheme: "plantioapp",
+    scheme: "plantinggeotracker",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.plantio.udv",
+      bundleIdentifier: "com.example.plantinggeotracker",
       config: {
         googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
       },
     },
     android: {
-      package: "com.plantio.udv",
+      package: "com.example.plantinggeotracker",
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
         backgroundColor: "#ffffff",
